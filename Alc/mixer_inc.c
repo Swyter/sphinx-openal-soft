@@ -9,7 +9,7 @@
 #include "alu.h"
 
 
-static inline void ApplyCoeffs(ALsizei Offset, ALfloat (*restrict Values)[2],
+void ApplyCoeffs(ALsizei Offset, ALfloat (*restrict Values)[2],
                                const ALsizei irSize,
                                const ALfloat (*restrict Coeffs)[2],
                                ALfloat left, ALfloat right);

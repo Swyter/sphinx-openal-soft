@@ -749,7 +749,7 @@ FILE *LogFile;
 #ifdef _DEBUG
 enum LogLevel LogLevel = LogWarning;
 #else
-enum LogLevel LogLevel = LogError;
+enum LogLevel LogLevel = LogTrace; // LogError;
 #endif
 
 /* Flag to trap ALC device errors */
@@ -2068,7 +2068,7 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
                 ERR("Unexpected hrtf value: %s\n", hrtf);
         }
 
-        if(hrtf_userreq == Hrtf_Enable || (hrtf_userreq != Hrtf_Disable && hrtf_appreq == Hrtf_Enable))
+        if(hrtf_userreq == Hrtf_Enable || (hrtf_userreq != Hrtf_Disable && (hrtf_appreq == Hrtf_Enable || device->IsHeadphones)))
         {
             struct Hrtf *hrtf = NULL;
             if(VECTOR_SIZE(device->HrtfList) == 0)
@@ -3530,6 +3530,9 @@ ALC_API ALCvoid* ALC_APIENTRY alcGetProcAddress(ALCdevice *device, const ALCchar
     }
     else
     {
+        ptr = dlsym(NULL, funcName);
+
+#if 0
         size_t i = 0;
         for(i = 0;i < COUNTOF(alcFunctions);i++)
         {
@@ -3539,6 +3542,7 @@ ALC_API ALCvoid* ALC_APIENTRY alcGetProcAddress(ALCdevice *device, const ALCchar
                 break;
             }
         }
+#endif
     }
 
     return ptr;

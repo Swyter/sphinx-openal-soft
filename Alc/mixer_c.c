@@ -131,7 +131,7 @@ void ALfilterState_processC(ALfilterState *filter, ALfloat *restrict dst, const 
 }
 
 
-static inline void ApplyCoeffs(ALsizei Offset, ALfloat (*restrict Values)[2],
+/* static inline void ApplyCoeffs(ALsizei Offset, ALfloat (*restrict Values)[2],
                                const ALsizei IrSize,
                                const ALfloat (*restrict Coeffs)[2],
                                ALfloat left, ALfloat right)
@@ -143,7 +143,7 @@ static inline void ApplyCoeffs(ALsizei Offset, ALfloat (*restrict Values)[2],
         Values[off][0] += Coeffs[c][0] * left;
         Values[off][1] += Coeffs[c][1] * right;
     }
-}
+} */
 
 #define MixHrtf MixHrtf_C
 #define MixHrtfBlend MixHrtfBlend_C

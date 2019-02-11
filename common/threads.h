@@ -117,7 +117,7 @@ inline int altss_set(altss_t tss_id, void *val)
 #include <stdint.h>
 #include <errno.h>
 #include <pthread.h>
-
+#include <sched.h>
 
 typedef pthread_t althrd_t;
 typedef pthread_mutex_t almtx_t;

@@ -96,7 +96,7 @@ static int ALCsndioBackend_mixerProc(void *ptr)
     size_t wrote;
 
     SetRTPriority();
-    althrd_setname(althrd_current(), MIXER_THREAD_NAME);
+    althrd_setname(althrd_current(), MIXER_THREAD_NAME); sio_eof(self->sndHandle);
 
     frameSize = FrameSizeFromDevFmt(device->FmtChans, device->FmtType, device->AmbiOrder);
 
@@ -110,6 +110,7 @@ static int ALCsndioBackend_mixerProc(void *ptr)
         ALCsndioBackend_unlock(self);
         while(len > 0 && !self->killNow)
         {
+            /* swy: this blocks until we have enough 'blocks' in the queue */
             wrote = sio_write(self->sndHandle, WritePtr, len);
             if(wrote == 0)
             {
@@ -212,8 +213,24 @@ static ALCboolean ALCsndioBackend_reset(ALCsndioBackend *self)
         return ALC_FALSE;
     }
 
+    /* swy: use the implementation-defined audio jack hint to
+            conditionally enable HRTF on demand */
+    device->IsHeadphones = par.__magic;
     device->Frequency = par.rate;
-    device->FmtChans = ((par.pchan==1) ? DevFmtMono : DevFmtStereo);
+
+
+    //device->FmtChans = ((par.pchan==1) ? DevFmtMono : DevFmtStereo);
+
+         if (par.pchan == 1) device->FmtChans = DevFmtMono;
+    else if (par.pchan == 2) device->FmtChans = DevFmtStereo;
+    else if (par.pchan == 6) device->FmtChans = DevFmtX51;
+    else if (par.pchan == 7) device->FmtChans = DevFmtX61;
+    else if (par.pchan == 8) device->FmtChans = DevFmtX71;
+    else
+    {
+        ERR("Unhandled channel count: %u\n", par.pchan);
+        return ALC_FALSE;
+    }
 
     if(par.bits == 8 && par.sig == 1)
         device->FmtType = DevFmtByte;
@@ -233,8 +250,8 @@ static ALCboolean ALCsndioBackend_reset(ALCsndioBackend *self)
         return ALC_FALSE;
     }
 
-    device->UpdateSize = par.round;
-    device->NumUpdates = (par.bufsz/par.round) + 1;
+    device->UpdateSize = par.appbufsz;
+    device->NumUpdates = par.round;
 
     SetDefaultChannelOrder(device);
 
@@ -245,9 +262,7 @@ static ALCboolean ALCsndioBackend_start(ALCsndioBackend *self)
 {
     ALCdevice *device = STATIC_CAST(ALCbackend,self)->mDevice;
 
-    self->data_size = device->UpdateSize * FrameSizeFromDevFmt(
-        device->FmtChans, device->FmtType, device->AmbiOrder
-    );
+    self->data_size = device->UpdateSize;
     al_free(self->mix_data);
     self->mix_data = al_calloc(16, self->data_size);
 

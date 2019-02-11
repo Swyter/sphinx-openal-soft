@@ -190,7 +190,7 @@ const ALfloat *Resample_bsinc32_Neon(const InterpState *state,
 }
 
 
-static inline void ApplyCoeffs(ALsizei Offset, ALfloat (*restrict Values)[2],
+inline void ApplyCoeffs(ALsizei Offset, ALfloat (*restrict Values)[2],
                                const ALsizei IrSize,
                                const ALfloat (*restrict Coeffs)[2],
                                ALfloat left, ALfloat right)

@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "AL/al.h"
-#include "AL/alc.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 #include "alMain.h"
 #include "alAuxEffectSlot.h"
 #include "alThunk.h"

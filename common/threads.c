@@ -485,6 +485,7 @@ void alcall_once(alonce_flag *once, void (*callback)(void))
 #include <sys/time.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <sched.h>
 #ifdef HAVE_PTHREAD_NP_H
 #include <pthread_np.h>
 #endif
@@ -521,6 +522,9 @@ typedef struct thread_cntr {
 
 static void *althrd_starter(void *arg)
 {
+    static cpu_set_t mask; mask.__bits[0] = 0b010; // CPU_ALLOC(mask); CPU_ZERO(mask); CPU_SET(0, mask);
+    pthread_setaffinity_np(althrd_current(), -1, &mask);
+
     thread_cntr cntr;
     memcpy(&cntr, arg, sizeof(cntr));
     free(arg);
@@ -536,6 +540,8 @@ int althrd_create(althrd_t *thr, althrd_start_t func, void *arg)
     size_t stackmult = 1;
     int err;
 
+    struct sched_param sched;
+
     cntr = malloc(sizeof(*cntr));
     if(!cntr) return althrd_nomem;
 
@@ -544,17 +550,30 @@ int althrd_create(althrd_t *thr, althrd_start_t func, void *arg)
         free(cntr);
         return althrd_error;
     }
+
+    pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+    pthread_attr_getschedparam(&attr, &sched);
+
+    sched.sched_priority = -16;
+
+    pthread_attr_setschedparam(&attr, &sched);
+
+    cpu_set_t cpus; cpus.__bits[0] = 0b010;
+
+    //pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+
 retry_stacksize:
-    if(pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE*stackmult) != 0)
-    {
-        pthread_attr_destroy(&attr);
-        free(cntr);
-        return althrd_error;
-    }
+ // if(pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE*stackmult) != 0)
+ // {
+ //    pthread_attr_destroy(&attr);
+ //     free(cntr);
+ //     return althrd_error;
+ // }
 
     cntr->func = func;
     cntr->arg = arg;
     if((err=pthread_create(thr, &attr, althrd_starter, cntr)) == 0)
+    //if ((err = pthread_create(thr, NULL, althrd_starter, cntr)) == 0)
     {
         pthread_attr_destroy(&attr);
         return althrd_success;
@@ -582,9 +601,7 @@ retry_stacksize:
 
 int althrd_detach(althrd_t thr)
 {
-    if(pthread_detach(thr) != 0)
-        return althrd_error;
-    return althrd_success;
+    return althrd_join(thr, NULL);
 }
 
 int althrd_join(althrd_t thr, int *res)

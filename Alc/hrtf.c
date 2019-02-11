@@ -963,11 +963,13 @@ vector_EnumeratedHrtf EnumerateHrtf(const_al_string devname)
         const ALubyte *rdata;
         size_t rsize, i;
 
+#if 0
         flist = SearchDataFiles(".mhr", "openal/hrtf");
         for(i = 0;i < VECTOR_SIZE(flist);i++)
             AddFileEntry(&list, VECTOR_ELEM(flist, i));
         VECTOR_FOR_EACH(al_string, flist, alstr_reset);
         VECTOR_DEINIT(flist);
+#endif
 
         rdata = GetResource(IDR_DEFAULT_44100_MHR, &rsize);
         if(rdata != NULL && rsize > 0)

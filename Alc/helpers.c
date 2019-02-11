@@ -242,6 +242,8 @@ void FillCPUCaps(ALuint capfilter)
 #endif
 #endif
 #ifdef HAVE_NEON
+    caps |= CPU_CAP_NEON;
+#elif 0
     FILE *file = fopen("/proc/cpuinfo", "rt");
     if(!file)
         ERR("Failed to open /proc/cpuinfo, cannot check for NEON support\n");
@@ -294,6 +296,7 @@ void FillCPUCaps(ALuint capfilter)
 
 void SetMixerFPUMode(FPUCtl *ctl)
 {
+	return;
 #ifdef HAVE_FENV_H
     fegetenv(STATIC_CAST(fenv_t, ctl));
 #ifdef _WIN32
@@ -347,6 +350,7 @@ void SetMixerFPUMode(FPUCtl *ctl)
 
 void RestoreFPUMode(const FPUCtl *ctl)
 {
+	return;
 #ifdef HAVE_FENV_H
     fesetenv(STATIC_CAST(fenv_t, ctl));
 #ifdef _WIN32
@@ -954,6 +958,7 @@ struct FileMapping MapFileToMem(const char *fname)
     void *ptr;
     int fd;
 
+#if 0
     fd = open(fname, O_RDONLY, 0);
     if(fd == -1)
     {
@@ -978,6 +983,8 @@ struct FileMapping MapFileToMem(const char *fname)
     ret.fd = fd;
     ret.ptr = ptr;
     ret.len = sbuf.st_size;
+#endif
+
     return ret;
 }
 
@@ -998,13 +1005,13 @@ void SetRTPriority(void)
     if(RTPrioLevel > 0)
         failed = !SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 #elif defined(HAVE_PTHREAD_SETSCHEDPARAM) && !defined(__OpenBSD__)
-    if(RTPrioLevel > 0)
+    if(true) //(RTPrioLevel > 0)
     {
         struct sched_param param;
         /* Use the minimum real-time priority possible for now (on Linux this
          * should be 1 for SCHED_RR) */
-        param.sched_priority = sched_get_priority_min(SCHED_RR);
-        failed = !!pthread_setschedparam(pthread_self(), SCHED_RR, &param);
+        param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+        failed = !!pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
     }
 #else
     /* Real-time priority not available */

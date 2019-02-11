@@ -419,6 +419,8 @@ void ReadALConfig(void)
 #else
 void ReadALConfig(void)
 {
+    return; //---
+
     char buffer[PATH_MAX];
     const char *str;
     al_string ppath;
